@@ -476,7 +476,7 @@ class OrderEditPage(QWidget):
             return
 
         if not self.delivery_point_field.text().strip():
-            QMessageBox.warning(self, "Ошибка", "Введите адрес пункта выдачи")
+            QMessageBox.warning(self, "Ошибка", "Поле «Пункт выдачи» не заполнено. Укажите адрес пункта выдачи заказа")
             return
 
         try:
