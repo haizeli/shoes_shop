@@ -52,3 +52,60 @@
 - `stock_levels` — остатки товаров по пунктам выдачи (товар, пункт выдачи, количество).
 ## Автор
 Хазбиева Хава, группа ПКС-44
+
+
+## Запуск PostgreSQL через Docker Compose
+
+Приложение запускается в Windows, а PostgreSQL и вспомогательный сервис `db-check` работают в контейнерах.
+
+### Требования
+
+- Docker Desktop (Linux containers) и Docker Compose v2;
+- Python и зависимости из `requirements.txt`.
+
+### Подготовка
+
+1. Скопировать `.env.example` в `.env` и задать свой локальный пароль (латинские буквы и цифры) в `POSTGRES_PASSWORD`.
+2. Скопировать `config.ini.example` в `config.ini`: `host = localhost`, `port = 5433`, `name = shoes_shop`, `user = postgres`, пароль такой же, как в `.env`.
+
+### Запуск
+
+```bash
+docker compose up --build -d
+docker compose ps
+```
+
+Сервис `db` должен иметь статус `healthy`. Сервис `db-check` выполняет одноразовую проверку и завершается с кодом 0.
+
+### Импорт базы данных
+
+Команды выполняются из корня проекта (в Git Bash перед `docker` добавить `MSYS_NO_PATHCONV=1`):
+
+```bash
+docker compose cp database/shoes_shop.sql db:/tmp/shoes_shop.sql
+docker compose exec db sed -i '/transaction_timeout/d' /tmp/shoes_shop.sql
+docker compose exec db psql -v ON_ERROR_STOP=1 -U postgres -d shoes_shop -f /tmp/shoes_shop.sql
+```
+
+Строка с `sed` нужна, потому что скрипт выгружен из более новой версии PostgreSQL, чем в контейнере (14).
+
+### Проверка
+
+```bash
+docker compose run --rm --no-deps db-check
+```
+
+Ожидается строка `OK: база=shoes_shop; таблиц=7`. Затем запустить приложение: `python main.py`.
+
+### Адреса подключения
+
+- приложение в Windows: `localhost:5433`;
+- сервис `db-check` внутри Compose: `db:5432`.
+
+### Остановка
+
+```bash
+docker compose stop
+```
+
+Команду `docker compose down -v` не использовать: она удаляет данные базы.
