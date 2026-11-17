@@ -109,3 +109,47 @@ docker compose stop
 ```
 
 Команду `docker compose down -v` не использовать: она удаляет данные базы.
+
+
+## Постоянное хранение и сети
+
+### Именованный том
+
+Файлы PostgreSQL хранятся в именованном томе `db_data` (в Docker он называется `shoe-shop_db_data`) и не теряются при пересоздании контейнера `db`.
+
+### Резервная копия и восстановление
+
+Каталог `backups/` исключён из Git: в дампе могут быть данные пользователей.
+
+```bash
+mkdir -p backups
+MSYS_NO_PATHCONV=1 docker compose exec db pg_dump -U postgres -d shoes_shop -f /tmp/backup.sql
+MSYS_NO_PATHCONV=1 docker compose cp db:/tmp/backup.sql ./backups/backup.sql
+```
+
+Восстановление в пустую базу:
+
+```bash
+MSYS_NO_PATHCONV=1 docker compose cp ./backups/backup.sql db:/tmp/restore.sql
+MSYS_NO_PATHCONV=1 docker compose exec db psql -v ON_ERROR_STOP=1 -U postgres -d shoes_shop -f /tmp/restore.sql
+```
+
+### Запуск и проверка
+
+```bash
+docker compose up -d
+docker compose ps
+docker compose run --rm --no-deps db-check
+```
+
+Пересоздание контейнера с сохранением данных: `docker compose up -d --force-recreate db`.
+
+### Сети и адреса
+
+- Сервисы `db` и `db-check` подключены к пользовательской сети `shoe-backend` (тип bridge).
+- `db-check` обращается к базе по имени `db`, порт `5432`.
+- Приложение в Windows подключается к `localhost:5433`: порт опубликован только на локальном интерфейсе (`127.0.0.1:5433:5432`).
+
+### Предупреждение
+
+Команда `docker compose down -v` удаляет именованный том вместе с базой данных. Без резервной копии данные будут потеряны. Для остановки используйте `docker compose stop` или `docker compose down` (без `-v`).
