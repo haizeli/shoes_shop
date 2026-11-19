@@ -153,3 +153,12 @@ docker compose run --rm --no-deps db-check
 ### Предупреждение
 
 Команда `docker compose down -v` удаляет именованный том вместе с базой данных. Без резервной копии данные будут потеряны. Для остановки используйте `docker compose stop` или `docker compose down` (без `-v`).
+
+
+## Windows-сборка
+
+Приложение собирается PyInstaller в режиме onedir:
+
+    python -m PyInstaller --noconfirm --clean ShoeStore.spec
+
+Результат: `dist/ShoeStore/ShoeStore.exe`. Настройки подключения читаются из `config.ini` рядом с EXE. Установка и запуск описаны в `INSTALL.md`. База данных в EXE не упакована и запускается отдельно через Docker Compose.

@@ -17,6 +17,10 @@ except ImportError as e:
     QMessageBox.critical(None, "Ошибка импорта", f"Не удалось импортировать модули: {e}")
     sys.exit(1)
 
+if getattr(sys, "frozen", False):
+    os.chdir(sys._MEIPASS)
+else:
+    os.chdir(os.path.dirname(os.path.abspath(__file__)))
 
 def link_photos_to_products():
     products = db.get_all_products()

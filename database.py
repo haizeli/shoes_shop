@@ -5,9 +5,12 @@ import sys
 import os
 import configparser
 
-_config = configparser.ConfigParser()
-_config.read(os.path.join(os.path.dirname(os.path.abspath(__file__)), "config.ini"), encoding="utf-8")
-_db = _config["database"]
+def get_config_path():
+    if getattr(sys, "frozen", False):
+        base_dir = os.path.dirname(sys.executable)
+    else:
+        base_dir = os.path.dirname(os.path.abspath(__file__))
+    return os.path.join(base_dir, "config.ini")
 
 class Database:
     def __init__(self):
@@ -17,7 +20,7 @@ class Database:
     def connect(self):
         try:
             config = configparser.ConfigParser()
-            config_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "config.ini")
+            config_path = get_config_path()
             config.read(config_path, encoding="utf-8")
             db = config["database"]
             self.connection = psycopg2.connect(
